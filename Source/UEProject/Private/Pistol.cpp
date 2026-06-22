@@ -38,6 +38,7 @@ void APistol::PerformFire()
         // 取得槍口的座標與旋轉 (假設你已經有射擊點，這裡以 Actor 自身作為基準)
         FVector SpawnLocation = GetActorLocation();
         FRotator SpawnRotation = GetActorRotation();
+        SpawnRotation.Yaw += 90.0f;
 
         // 設定生成參數
         FActorSpawnParameters SpawnParams;
