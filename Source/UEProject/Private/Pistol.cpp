@@ -3,6 +3,10 @@
 
 #include "Pistol.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+#include "Engine/World.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 APistol::APistol()
@@ -32,23 +36,52 @@ void APistol::StopFire()
 
 void APistol::PerformFire()
 {
-    // 檢查是否有設定子彈類別，且世界是否有效
-    if (BulletClass && GetWorld())
+    // 改為射線檢測：從畫面正中央發出一條射線，直接處理命中（不生成子彈 Actor）
+    if (GetWorld())
     {
-        // 取得槍口的座標與旋轉 (假設你已經有射擊點，這裡以 Actor 自身作為基準)
-        FVector SpawnLocation = GetActorLocation();
-        FRotator SpawnRotation = GetActorRotation();
-        SpawnRotation.Yaw += 90.0f;
+        APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        if (PC)
+        {
+            int32 ViewX = 0, ViewY = 0;
+            PC->GetViewportSize(ViewX, ViewY);
+            float ScreenX = ViewX * 0.5f;
+            float ScreenY = ViewY * 0.5f;
 
-        // 設定生成參數
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.Owner = this;
-        SpawnParams.Instigator = GetInstigator();
+            FVector WorldLocation;
+            FVector WorldDirection;
+            // 將畫面中心反投影為世界空間射線
+            if (PC->DeprojectScreenPositionToWorld(ScreenX, ScreenY, WorldLocation, WorldDirection))
+            {
+                const float Range = TraceRange > 0.f ? TraceRange : 10000.f;
+                FVector TraceStart = WorldLocation;
+                FVector TraceEnd = TraceStart + WorldDirection * Range;
 
-        // 生成子彈
-        GetWorld()->SpawnActor<AActor>(BulletClass, SpawnLocation, SpawnRotation, SpawnParams);
+                FHitResult Hit;
+                FCollisionQueryParams Params;
+                Params.AddIgnoredActor(this);
+                if (GetInstigator()) Params.AddIgnoredActor(GetInstigator());
+
+                bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+
+#if WITH_EDITOR
+                // 除錯用，可在編輯器中看到射線（可移除或以條件編譯包覆）
+                DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
+                if (bHit)
+                {
+                    DrawDebugPoint(GetWorld(), Hit.ImpactPoint, 8.0f, FColor::Yellow, false, 2.0f);
+                }
+#endif
+
+                // 處理命中：若擊中角色或物件，套用傷害
+                if (bHit && Hit.GetActor())
+                {
+                    // 套用點傷害
+                    AController* InstigatorController = GetInstigatorController();
+                    UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, WorldDirection, Hit, InstigatorController, this, UDamageType::StaticClass());
+                }
+            }
+        }
     }
-    // 呼叫藍圖事件，去執行 SpawnActor 等視覺行為
-    K2_PerformFire();
+    // 開火行為已在 C++ 處理（傷害、射線等），藍圖視覺可另行監聽或觸發
 }
 
