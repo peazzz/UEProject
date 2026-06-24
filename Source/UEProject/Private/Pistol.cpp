@@ -21,11 +21,8 @@ void APistol::StartFire()
     // 防止計時器重複啟動
     if (GetWorldTimerManager().IsTimerActive(FireTimerHandle)) return;
 
-    // 立即執行第一發
-    PerformFire();
-
-    // 啟動循環計時器
-    GetWorldTimerManager().SetTimer(FireTimerHandle, this, &APistol::PerformFire, FireRate, true);
+    // 啟動循環計時器（立即觸發會呼叫 PerformFire，但 PerformFire 內會再檢查冷卻）
+    GetWorldTimerManager().SetTimer(FireTimerHandle, this, &APistol::PerformFire, FireRate, true, 0.0f);
 }
 
 void APistol::StopFire()
@@ -36,6 +33,17 @@ void APistol::StopFire()
 
 void APistol::PerformFire()
 {
+    // 檢查冷卻：若距離上一次開火尚未達到 FireRate，跳過本次
+    if (GetWorld())
+    {
+        float Now = GetWorld()->GetTimeSeconds();
+        const float Tolerance = 0.01f; // allow small scheduling jitter
+        if (Now - LastFireTime < FireRate - Tolerance)
+        {
+            return;
+        }
+        LastFireTime = Now;
+    }
     // 改為射線檢測：從畫面正中央發出一條射線，直接處理命中（不生成子彈 Actor）
     if (GetWorld())
     {

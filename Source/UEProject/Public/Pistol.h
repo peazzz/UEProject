@@ -17,7 +17,7 @@ public:
 
     // 設定開火頻率，在編輯器中可以修改
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-    float FireRate = 0.7f;
+    float FireRate = 0.67f;
 
     // 開火處理函數，宣告為 BlueprintCallable 才能在藍圖中呼叫
     UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -42,6 +42,9 @@ public:
 protected:
     // C++ 內部的開火邏輯
     void PerformFire();
+
+    // 上一次開火時間（用於強制冷卻）
+    float LastFireTime = -100000.0f;
 
     // (已移除 K2_PerformFire，開火視覺/音效請在其他藍圖事件處理)
 
