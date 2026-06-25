@@ -11,6 +11,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "UEProject.h"
+#include "Blueprint/UserWidget.h"
+#include "Misc/OutputDeviceNull.h"
 
 AUEProjectCharacter::AUEProjectCharacter()
 {
@@ -130,4 +132,112 @@ void AUEProjectCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void AUEProjectCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// store initial transform for respawn
+	InitialLocation = GetActorLocation();
+	InitialRotation = GetActorRotation();
+
+	// initialize health
+	Health = MaxHealth;
+	bIsDead = false;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC && PlayerHUDClass)
+	{
+		// 建立 Widget
+		PlayerHUDInstance = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
+		if (PlayerHUDInstance)
+		{
+			// 放到畫面上
+			PlayerHUDInstance->AddToViewport();
+		}
+	}
+
+	// 初始化 HUD 顯示
+	UpdateHUDHealth();
+}
+
+float AUEProjectCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bIsDead) return 0.f;
+
+	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (ActualDamage <= 0.f) return 0.f;
+
+	Health -= ActualDamage;
+	UE_LOG(LogTemp, Log, TEXT("AUEProjectCharacter::TakeDamage %s took %f damage, health now %f"), *GetNameSafe(this), ActualDamage, Health);
+	UpdateHUDHealth();
+
+	if (Health <= 0.f && !bIsDead)
+	{
+		Die();
+	}
+
+	return ActualDamage;
+}
+
+void AUEProjectCharacter::Die()
+{
+	bIsDead = true;
+	UE_LOG(LogTemp, Log, TEXT("AUEProjectCharacter::Die %s died"), *GetNameSafe(this));
+
+	UpdateHUDHealth();
+
+	SetActorLocation(InitialLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	SetActorRotation(InitialRotation);
+
+	// disable movement and input
+	GetCharacterMovement()->DisableMovement();
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		DisableInput(PC);
+	}
+
+	// Blueprint hook
+	OnPlayerDied();
+
+	// schedule respawn
+	FTimerHandle RespawnHandle;
+	GetWorldTimerManager().SetTimer(RespawnHandle, this, &AUEProjectCharacter::Respawn, RespawnDelay, false);
+}
+
+
+void AUEProjectCharacter::Respawn()
+{
+	// restore health and position
+	Health = MaxHealth;
+	bIsDead = false;
+
+	// teleport to initial location
+	SetActorLocation(InitialLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	SetActorRotation(InitialRotation);
+
+	// re-enable movement and input
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		EnableInput(PC);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("AUEProjectCharacter::Respawn %s respawned"), *GetNameSafe(this));
+	OnPlayerRespawned();
+}
+
+// 實作反射呼叫 UMG 函數的邏輯
+void AUEProjectCharacter::UpdateHUDHealth()
+{
+	if (!PlayerHUDInstance) return;
+
+	// 計算血量比例
+	float Percent = FMath::Clamp(Health / MaxHealth, 0.f, 1.f);
+
+	// 透過反射呼叫你在 WBP_PlayerHUD 裡寫的 UpdatePlayerHealth 函數
+	FOutputDeviceNull Ar;
+	FString Cmd = FString::Printf(TEXT("UpdatePlayerHealth %f"), Percent);
+	PlayerHUDInstance->CallFunctionByNameWithArguments(*Cmd, Ar, nullptr, true);
 }

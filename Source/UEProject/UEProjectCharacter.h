@@ -60,6 +60,52 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	// Initial spawn transform used for respawn
+	FVector InitialLocation;
+	FRotator InitialRotation;
+
+	// Health
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	float Health = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	bool bIsDead = false;
+
+	// Respawn delay in seconds after death
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float RespawnDelay = 3.0f;
+
+	// Called when the character dies
+	void Die();
+
+	// Respawn the character at initial location
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void Respawn();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Health")
+	void OnPlayerDied();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Health")
+	void OnPlayerRespawned();
+
+	// 指定你的 WBP_PlayerHUD 類別
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HUD")
+	TSubclassOf<class UUserWidget> PlayerHUDClass;
+
+	// 儲存生成後的 UI 實例
+	UPROPERTY()
+	class UUserWidget* PlayerHUDInstance = nullptr;
+
+	// 輔助更新 UI 的函數
+	void UpdateHUDHealth();
+
+protected:
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -84,6 +130,9 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	/** Handle incoming damage */
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 public:
 

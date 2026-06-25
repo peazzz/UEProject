@@ -6,6 +6,7 @@
 #include "Enemy.generated.h"
 
 class AEnemyAIController;
+class UWidgetComponent;
 
 UCLASS()
 class UEPROJECT_API AEnemy : public ACharacter
@@ -49,6 +50,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
 	float AttackRate = 1.0f;
 
+	// 頭頂血條組件
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|UI", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* HealthBarWidgetComp;
+
+	// 用於更新 UI 的輔助函數
+	void UpdateHealthUI();
+
 	// 儲存你的攻擊動畫蒙太奇
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Animation")
 	UAnimMontage* AttackMontage = nullptr;
@@ -73,4 +81,7 @@ public:
 	// Optional blueprint event called when death animation finishes (for VFX, sounds, spawn)
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
 	void OnDeathAnimationFinished();
+
+	UPROPERTY()
+	class ALevelManager* LevelManagerRef = nullptr;
 };
