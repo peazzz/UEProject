@@ -39,6 +39,7 @@ void ALevelManager::BeginPlay()
 
 	// 2. 遊戲開始，延遲一下後進入第 1 關
 	CurrentLevel = 0;
+	BP_ShowWaveUI(CurrentLevel + 1);
 	GetWorldTimerManager().SetTimer(NextLevelTimerHandle, this, &ALevelManager::StartNextLevel, DelayBetweenLevels, false);
 }
 
@@ -116,6 +117,8 @@ void ALevelManager::OnEnemyKilled()
 	if (EnemiesSpawnedSoFar >= TotalEnemiesThisLevel && ActiveEnemyCount <= 0)
 	{
 		UE_LOG(LogTemp, Log, TEXT("======== 關卡 %d 通關！ ========"), CurrentLevel);
+
+		BP_ShowWaveUI(CurrentLevel + 1);
 
 		// 倒數計時進入下一關
 		GetWorldTimerManager().SetTimer(NextLevelTimerHandle, this, &ALevelManager::StartNextLevel, DelayBetweenLevels, false);

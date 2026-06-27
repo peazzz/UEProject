@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Level System")
 	float DelayBetweenLevels = 5.0f;
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Level System")
+	void BP_ShowWaveUI(int32 WaveNumber);
+
 private:
 	int32 CurrentLevel = 0;         // 當前關卡 n
 	int32 TotalEnemiesThisLevel = 0;// 本關總共要生成的數量 (n*n - n)
