@@ -54,6 +54,8 @@ public:
 	/** Constructor */
 	AUEProjectCharacter();	
 
+	FORCEINLINE class UUserWidget* GetPlayerHUDInstance() const { return PlayerHUDInstance; }
+
 protected:
 
 	/** Initialize input action bindings */

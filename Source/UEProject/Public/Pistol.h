@@ -50,6 +50,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Combat|Ammo")
     void ReloadAmmo();
 
+    void UpdateWeaponAmmoUI();
+
 protected:
     virtual void BeginPlay() override;
     // C++ 內部的開火邏輯

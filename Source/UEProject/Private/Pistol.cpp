@@ -7,6 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "UEProjectCharacter.h"
+#include "Misc/OutputDeviceNull.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 APistol::APistol()
@@ -70,6 +73,10 @@ void APistol::BeginPlay()
     Super::BeginPlay();
     // 遊戲開始時，自動將子彈補滿
     CurrentAmmo = MaxAmmo;
+
+    // === 改用計時器延遲 0.2 秒再初始化 UI，確保角色的 HUD 已經生成完畢 ===
+    FTimerHandle UIInitHandle;
+    GetWorldTimerManager().SetTimer(UIInitHandle, this, &APistol::UpdateWeaponAmmoUI, 0.2f, false);
 }
 
 bool APistol::ConsumeAmmo()
@@ -77,6 +84,7 @@ bool APistol::ConsumeAmmo()
     if (CurrentAmmo > 0)
     {
         CurrentAmmo--;
+        UpdateWeaponAmmoUI();
         return true;
     }
     return false;
@@ -85,5 +93,24 @@ bool APistol::ConsumeAmmo()
 void APistol::ReloadAmmo()
 {
     CurrentAmmo = MaxAmmo;
+    UpdateWeaponAmmoUI();
 }
 
+void APistol::UpdateWeaponAmmoUI()
+{
+    // 1. 取得持有這把槍的角色
+    AUEProjectCharacter* MyCharacter = Cast<AUEProjectCharacter>(GetInstigator());
+
+    // 2. 改用你剛剛寫的 GetPlayerHUDInstance() 函數來取得 UI 實例
+    if (!MyCharacter || !MyCharacter->GetPlayerHUDInstance()) return;
+
+    // 3. 計算子彈百分比
+    float Percent = MaxAmmo > 0 ? (float)CurrentAmmo / (float)MaxAmmo : 0.f;
+
+    // 4. 反射呼叫藍圖
+    FOutputDeviceNull Ar;
+    FString Cmd = FString::Printf(TEXT("UpdatePlayerAmmoUI %f %d %d"), Percent, CurrentAmmo, MaxAmmo);
+
+    // 這裡同樣改用函數獲取
+    MyCharacter->GetPlayerHUDInstance()->CallFunctionByNameWithArguments(*Cmd, Ar, nullptr, true);
+}
