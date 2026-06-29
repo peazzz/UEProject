@@ -10,6 +10,7 @@
 #include "UEProjectCharacter.h"
 #include "Misc/OutputDeviceNull.h"
 #include "Blueprint/UserWidget.h"
+#include "GameType.h"
 
 // Sets default values
 APistol::APistol()

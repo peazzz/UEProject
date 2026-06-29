@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "GameType.h"
 #include "UEProjectCharacter.generated.h"
 
 class USpringArmComponent;
@@ -55,6 +56,14 @@ public:
 	AUEProjectCharacter();	
 
 	FORCEINLINE class UUserWidget* GetPlayerHUDInstance() const { return PlayerHUDInstance; }
+
+	// 讓藍圖或 LevelManager 呼叫的升級函式
+	UFUNCTION(BlueprintCallable, Category = "Upgrade System")
+	void ApplyUpgrade(EUpgradeType UpgradeType);
+
+	// 用來存放目前玩家裝備的手槍（記得在藍圖 Spawn 手槍後，要把手槍引腳 Set 給這個變數）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	class APistol* CurrentWeapon;
 
 protected:
 

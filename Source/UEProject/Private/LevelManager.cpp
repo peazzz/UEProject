@@ -6,6 +6,7 @@
 #include "EnemySpawner.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "GameType.h"
 
 // Sets default values
 ALevelManager::ALevelManager()
@@ -118,10 +119,53 @@ void ALevelManager::OnEnemyKilled()
 	{
 		UE_LOG(LogTemp, Log, TEXT("======== 關卡 %d 通關！ ========"), CurrentLevel);
 
-		BP_ShowWaveUI(CurrentLevel + 1);
+		//BP_ShowWaveUI(CurrentLevel + 1);
+
+		// 升級流程
+		//GenerateUpgradeOptions();
+		FTimerHandle UpgradeDelayTimerHandle;
+		GetWorldTimerManager().SetTimer(UpgradeDelayTimerHandle, this, &ALevelManager::GenerateUpgradeOptions, 1.0f, false);
 
 		// 倒數計時進入下一關
 		GetWorldTimerManager().SetTimer(NextLevelTimerHandle, this, &ALevelManager::StartNextLevel, DelayBetweenLevels, false);
 	}
+}
+
+void ALevelManager::GenerateUpgradeOptions()
+{
+	// 1. 建立一個包含所有可升級項目的陣列
+	TArray<EUpgradeType> AllUpgrades;
+	AllUpgrades.Add(EUpgradeType::Pistol_FireRate);
+	AllUpgrades.Add(EUpgradeType::Pistol_Damage);
+	AllUpgrades.Add(EUpgradeType::Pistol_MaxAmmo);
+	AllUpgrades.Add(EUpgradeType::Character_MaxHealth);
+	AllUpgrades.Add(EUpgradeType::Character_MaxWalkSpeed);
+
+	// 2. 將陣列隨機亂序 (洗牌演算法)
+	int32 LastIndex = AllUpgrades.Num() - 1;
+	for (int32 i = 0; i <= LastIndex; ++i)
+	{
+		int32 Index = FMath::RandRange(i, LastIndex);
+		if (i != Index)
+		{
+			AllUpgrades.Swap(i, Index);
+		}
+	}
+
+	// 3. 取前兩個作為隨機選項
+	EUpgradeType OptionA = AllUpgrades[0];
+	EUpgradeType OptionB = AllUpgrades[1];
+
+	// 4. 暫停遊戲，顯示滑鼠，防範玩家在選升級時被打死
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC)
+	{
+		PC->SetPause(true);
+		PC->bShowMouseCursor = true;
+		PC->SetInputMode(FInputModeUIOnly()); // 限制玩家只能操作 UI
+	}
+
+	// 5. 呼叫藍圖事件，把抽到的項目傳過去顯示在 UI 上
+	BP_ShowUpgradeAndWaveUI(CurrentLevel + 1, OptionA, OptionB);
 }
 

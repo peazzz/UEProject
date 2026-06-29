@@ -13,6 +13,8 @@
 #include "UEProject.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/OutputDeviceNull.h"
+#include "GameType.h"
+#include "Pistol.h"
 
 AUEProjectCharacter::AUEProjectCharacter()
 {
@@ -240,4 +242,50 @@ void AUEProjectCharacter::UpdateHUDHealth()
 	FOutputDeviceNull Ar;
 	FString Cmd = FString::Printf(TEXT("UpdatePlayerHealth %f"), Percent);
 	PlayerHUDInstance->CallFunctionByNameWithArguments(*Cmd, Ar, nullptr, true);
+}
+
+void AUEProjectCharacter::ApplyUpgrade(EUpgradeType UpgradeType)
+{
+	switch (UpgradeType)
+	{
+	case EUpgradeType::Character_MaxHealth:
+		MaxHealth += 100; // 每次升級提升100血量上限
+		Health = MaxHealth;    // 同步幫玩家回滿
+		UpdateHUDHealth();  // 呼叫你現有的 UI 更新邏輯
+		break;
+
+	case EUpgradeType::Character_MaxWalkSpeed:
+		// 直接修改 CharacterMovement 的最大走路速度
+		if (GetCharacterMovement())
+		{
+			GetCharacterMovement()->MaxWalkSpeed *= 1.5f;
+		}
+		break;
+
+	case EUpgradeType::Pistol_FireRate:
+		if (CurrentWeapon)
+		{
+			// 注意：FireRate 通常代表射擊間隔，所以「升級」應該是讓間隔「變短」
+			CurrentWeapon->FireRate = FMath::Max(0.1f, CurrentWeapon->FireRate * 0.5f);
+		}
+		break;
+
+	case EUpgradeType::Pistol_Damage:
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->Damage *= 1.5f;
+		}
+		break;
+
+	case EUpgradeType::Pistol_MaxAmmo:
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->MaxAmmo *= 2;
+			CurrentWeapon->ReloadAmmo(); // 順便幫玩家把子彈補滿並刷新 UI
+		}
+		break;
+
+	default:
+		break;
+	}
 }

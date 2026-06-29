@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameType.h"
 #include "LevelManager.generated.h"
 
 UCLASS()
@@ -19,15 +20,23 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// 開始新的一關
-	void StartNextLevel();
-
 	// 固定頻率被 Timer 呼叫，用來分配生怪
 	void TriggerSpawnWave();
+
+	// 現在這裡就可以順利識別 EUpgradeType，且完全不需要包含角色的標頭檔
+	UFUNCTION(BlueprintImplementableEvent, Category = "Level System")
+	void BP_ShowUpgradeAndWaveUI(int32 NextWaveNumber, EUpgradeType OptionA, EUpgradeType OptionB);
 
 public:
 	// 被敵人呼叫：當有敵人死亡時
 	void OnEnemyKilled();
+
+	// 開始新的一關
+	UFUNCTION(BlueprintCallable, Category = "Level System")
+	void StartNextLevel();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Level System")
+	void BP_ShowWaveUI(int32 WaveNumber);
 
 protected:
 	// 要生成的敵人藍圖類別
@@ -42,9 +51,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Level System")
 	float DelayBetweenLevels = 5.0f;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Level System")
-	void BP_ShowWaveUI(int32 WaveNumber);
-
 private:
 	int32 CurrentLevel = 0;         // 當前關卡 n
 	int32 TotalEnemiesThisLevel = 0;// 本關總共要生成的數量 (n*n - n)
@@ -57,5 +63,7 @@ private:
 	// 儲存場上所有的 Spawner 參照
 	UPROPERTY()
 	TArray<class AEnemySpawner*> FoundSpawners;
+
+	void GenerateUpgradeOptions();
 
 };
