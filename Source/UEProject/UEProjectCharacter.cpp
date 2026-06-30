@@ -190,8 +190,8 @@ void AUEProjectCharacter::Die()
 
 	UpdateHUDHealth();
 
-	SetActorLocation(InitialLocation, false, nullptr, ETeleportType::TeleportPhysics);
-	SetActorRotation(InitialRotation);
+	//SetActorLocation(InitialLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	//SetActorRotation(InitialRotation);
 
 	// disable movement and input
 	GetCharacterMovement()->DisableMovement();
@@ -204,8 +204,8 @@ void AUEProjectCharacter::Die()
 	OnPlayerDied();
 
 	// schedule respawn
-	FTimerHandle RespawnHandle;
-	GetWorldTimerManager().SetTimer(RespawnHandle, this, &AUEProjectCharacter::Respawn, RespawnDelay, false);
+	//FTimerHandle RespawnHandle;
+	//GetWorldTimerManager().SetTimer(RespawnHandle, this, &AUEProjectCharacter::Respawn, RespawnDelay, false);
 }
 
 

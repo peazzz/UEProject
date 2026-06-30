@@ -112,6 +112,7 @@ void ALevelManager::TriggerSpawnWave()
 void ALevelManager::OnEnemyKilled()
 {
 	ActiveEnemyCount--;
+	TotalKills++;
 	UE_LOG(LogTemp, Log, TEXT("敵人死亡！剩餘活著的敵人: %d"), ActiveEnemyCount);
 
 	// 檢查是否「全部生完」而且「全部死光」

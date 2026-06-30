@@ -38,6 +38,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Level System")
 	void BP_ShowWaveUI(int32 WaveNumber);
 
+	// 儲存目前的總擊殺數
+	UPROPERTY(BlueprintReadOnly, Category = "LevelStat")
+	int32 TotalKills = 0;
+
 protected:
 	// 要生成的敵人藍圖類別
 	UPROPERTY(EditAnywhere, Category = "Level System")
