@@ -200,6 +200,15 @@ void AUEProjectCharacter::Die()
 		DisableInput(PC);
 	}
 
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		// 讓網格體開啟物理模擬
+		MeshComp->SetSimulatePhysics(true);
+
+		// 改變碰撞模式，讓屍體可以跟地面碰撞，但不會阻擋敵人或彈藥
+		MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+	}
+
 	// Blueprint hook
 	OnPlayerDied();
 
