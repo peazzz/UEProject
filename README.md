@@ -15,6 +15,6 @@
 https://drive.google.com/file/d/1mx_a0InyYywpAxR3kwdG2tyeRtRhp5YH/view?usp=sharing  
 下載解壓縮後，打開Windows/UEProject.exe即可。(注意音量)  
 ## 工期(含學習)
-* 6/7~7/1
+* 2026/6/7 ~ 2026/7/1
 ***
 ![image](https://github.com/peazzz/My-Website/blob/main/img/png/PC_UEProject.png)
